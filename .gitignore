@@ -160,3 +160,5 @@ cython_debug/
 .idea/
 /mysite/db.sqlite3
 /config.py
+/utils/test.xlsx
+/login.txt
