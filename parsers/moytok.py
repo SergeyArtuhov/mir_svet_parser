@@ -1,5 +1,6 @@
 from http.client import responses
 
+import tkinter as tk
 import requests
 from bs4 import BeautifulSoup
 import lxml
@@ -36,6 +37,8 @@ def login(session, login_url, login_data, headers, app):
 def search_product_by_article(session, search_url, app, file_path):
     articles = find_articles(file_path)[:40]
     articles_price = dict()
+    total_articles = len(articles)
+    app.parsed_data = []
     app.update_output(f"\n{'Артикул'.ljust(40)}{'Цена'}\n")
     app.update_output("-" * 80 + "\n")
     #print(f"\n{'Артикул'.ljust(40)}{'Цена'}")  # Заголовки
@@ -47,12 +50,15 @@ def search_product_by_article(session, search_url, app, file_path):
 
         rand_sleep()
         response = session.get(f'{search_url}{article}')
+        app.root.after(0, lambda: app.update_progress(i, total_articles))
         #print(response.status_code)
         if response.status_code == 200 and "Нет товаров, соответствующих критериям поиска." not in response.text:
             soup = BeautifulSoup(response.text, 'lxml')
             price = soup.find("div", class_="product-layout").find("p", class_="price").text.strip()
             articles_price[article] = price
             app.update_output(f'{article.ljust(40)}| {price}\n')
+            app.parsed_data.append([article, price])
             #print(f'{article.ljust(40)}| {price}')
-    app.update_output(f"Результаты: {articles_price}\n")
+    #app.update_output(f"Результаты: {articles_price}\n")
+    app.root.after(0, lambda: app.export_btn.config(state=tk.NORMAL))
     #print(articles_price)

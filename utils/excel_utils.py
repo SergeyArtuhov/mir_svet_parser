@@ -2,20 +2,24 @@ from openpyxl import load_workbook
 
 
 def is_row_hidden(sheet, row_index):
-
     return sheet.row_dimensions[row_index].hidden if row_index in sheet.row_dimensions else False
 
 def get_merged_cells(sheet):
-    merged_set = set()
-    for merged_range in sheet.merged_cells.ranges:
-        min_col, min_row, max_col, max_row = merged_range.bounds
-        for r in range(min_row, max_row + 1):
-            for c in range(min_col, max_col + 1):
-                merged_set.add((r, c))
-    return merged_set
+    return {
+        (r, c)
+        for merged_range in sheet.merged_cells.ranges
+        for r in range(merged_range.min_row, merged_range.max_row + 1)
+        for c in range(merged_range.min_col, merged_range.max_col + 1)
+    }
+    #merged_set = set()
+    #for merged_range in sheet.merged_cells.ranges:
+    #    min_col, min_row, max_col, max_row = merged_range.bounds
+    #    for r in range(min_row, max_row + 1):
+    #        for c in range(min_col, max_col + 1):
+    #            merged_set.add((r, c))
+    #return merged_set
 
 def header_finder(sheet):
-
     for row in sheet.iter_rows():
         for cell in row:
             if str(cell.value).lower() == "артикул":

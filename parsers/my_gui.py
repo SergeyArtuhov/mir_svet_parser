@@ -52,6 +52,29 @@ class ParserApp:
         )
         self.file_btn.pack(pady=5, fill=tk.X, padx=5)
 
+        self.export_btn = ttk.Button(
+        left_frame,
+        text="Экспорт в Excel",
+        command=self.export_to_excel,
+        state=tk.DISABLED
+        )
+        self.export_btn.pack(pady=5, fill=tk.X, padx=5)
+# Прогресс бар
+        self.progress = ttk.Progressbar(
+        left_frame,
+        orient=tk.HORIZONTAL,
+        mode='determinate',
+        length=150
+        )
+        self.progress.pack(pady=10, fill=tk.X, padx=5)
+
+        self.progress_label = ttk.Label(
+        left_frame,
+        text="Готов к работе",
+        anchor='center'
+        )
+        self.progress_label.pack(fill=tk.X, padx=5)
+#
         self.status_var = tk.StringVar()
         self.status_var.set("Готов к работе")
         self.status_bar = ttk.Label(
@@ -69,6 +92,38 @@ class ParserApp:
         )
         self.output_area.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
 
+    def export_to_excel(self):
+        if not self.parsed_data:
+            self.status_var.set("Нет данных для экспорта")
+            return
+
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+            title="Сохранить как"
+        )
+
+        if not file_path:
+            return
+
+        try:
+            from openpyxl import Workbook
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Парсинг артикулов"
+
+            ws.append(["Артикул", "Цена"])
+
+            for item in self.parsed_data:
+                ws.append(item)
+
+            wb.save(file_path)
+            self.status_var.set(f"Данные сохранены в {file_path}")
+            self.update_output(f"\nДанные экспортированы в: {file_path}\n")
+        except Exception as e:
+            self.status_var.set("Ошибка при экспорте")
+            self.update_output(f"\nОшибка при экспорте: {str(e)}\n")
     
     def select_file(self):
         file_path = filedialog.askopenfilename(
@@ -127,5 +182,9 @@ class ParserApp:
     
     def on_parsing_finished(self):
         self.start_btn.config(text="Начать парсинг", state=tk.NORMAL)
-        self.status_var.set("Готов к работе")
+        if self.parsed_data:
+            self.export_btn.config(state=tk.NORMAL)
+            self.status_var.set("Готов к работе (есть данные для экспорта)")
+        else:
+            self.status_var.set("Готов к работе (нет данных для экспорта)")
         self.update_output("=== Работа завершена ===\n")
